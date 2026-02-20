@@ -12,13 +12,18 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCommand:voicePrompt.startRecording"
+    "onCommand:voicePrompt.startRecording",
+    "onCommand:voicePrompt.setCloudApiKey"
   ],
   "contributes": {
     "commands": [
       {
         "command": "voicePrompt.startRecording",
         "title": "Voice Prompt: Start Recording"
+      },
+      {
+        "command": "voicePrompt.setCloudApiKey",
+        "title": "Voice Prompt: Set Cloud API Key"
       }
     ],
     "keybindings": [
@@ -64,6 +69,11 @@
           "type": "string",
           "default": "llama3.1:8b",
           "description": "Rewrite model identifier."
+        },
+        "voicePrompt.rewrite.cloudBaseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1/chat/completions",
+          "description": "Cloud rewrite API endpoint (OpenAI-compatible)."
         },
         "voicePrompt.rewrite.ollamaBaseUrl": {
           "type": "string",

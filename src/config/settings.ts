@@ -11,6 +11,7 @@ export interface VoicePromptSettings {
   sttTimeoutMs: number;
   rewriteProvider: RewriteProvider;
   rewriteModel: string;
+  rewriteCloudBaseUrl: string;
   rewriteOllamaBaseUrl: string;
   rewriteTimeoutMs: number;
   rewriteStyle: "concise" | "detailed" | "engineering" | "debugging";
@@ -37,6 +38,10 @@ export function readSettings(): VoicePromptSettings {
     sttTimeoutMs: cfg.get<number>("stt.timeoutMs", 15000),
     rewriteProvider: cfg.get<RewriteProvider>("rewrite.provider", "ollama"),
     rewriteModel: cfg.get<string>("rewrite.model", "llama3.1:8b"),
+    rewriteCloudBaseUrl: cfg.get<string>(
+      "rewrite.cloudBaseUrl",
+      "https://api.openai.com/v1/chat/completions"
+    ),
     rewriteOllamaBaseUrl: cfg.get<string>(
       "rewrite.ollamaBaseUrl",
       "http://127.0.0.1:11434"
