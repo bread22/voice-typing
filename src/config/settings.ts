@@ -7,8 +7,12 @@ export type SttProvider = "local" | "cloud";
 export interface VoicePromptSettings {
   sttProvider: SttProvider;
   sttModel: string;
+  sttLocalEndpoint: string;
+  sttTimeoutMs: number;
   rewriteProvider: RewriteProvider;
   rewriteModel: string;
+  rewriteOllamaBaseUrl: string;
+  rewriteTimeoutMs: number;
   rewriteStyle: "concise" | "detailed" | "engineering" | "debugging";
   previewBeforeInsert: boolean;
   autoFallbackToCloud: boolean;
@@ -26,8 +30,18 @@ export function readSettings(): VoicePromptSettings {
   return {
     sttProvider: cfg.get<SttProvider>("stt.provider", "local"),
     sttModel: cfg.get<string>("stt.model", "faster-whisper-base"),
+    sttLocalEndpoint: cfg.get<string>(
+      "stt.localEndpoint",
+      "http://127.0.0.1:8765/transcribe"
+    ),
+    sttTimeoutMs: cfg.get<number>("stt.timeoutMs", 15000),
     rewriteProvider: cfg.get<RewriteProvider>("rewrite.provider", "ollama"),
     rewriteModel: cfg.get<string>("rewrite.model", "llama3.1:8b"),
+    rewriteOllamaBaseUrl: cfg.get<string>(
+      "rewrite.ollamaBaseUrl",
+      "http://127.0.0.1:11434"
+    ),
+    rewriteTimeoutMs: cfg.get<number>("rewrite.timeoutMs", 20000),
     rewriteStyle: cfg.get<"concise" | "detailed" | "engineering" | "debugging">(
       "rewrite.style",
       "engineering"

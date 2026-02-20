@@ -42,6 +42,18 @@
           "default": "faster-whisper-base",
           "description": "STT model identifier."
         },
+        "voicePrompt.stt.localEndpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:8765/transcribe",
+          "description": "Local STT HTTP endpoint."
+        },
+        "voicePrompt.stt.timeoutMs": {
+          "type": "number",
+          "default": 15000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "description": "STT request timeout in milliseconds."
+        },
         "voicePrompt.rewrite.provider": {
           "type": "string",
           "default": "ollama",
@@ -52,6 +64,18 @@
           "type": "string",
           "default": "llama3.1:8b",
           "description": "Rewrite model identifier."
+        },
+        "voicePrompt.rewrite.ollamaBaseUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "Ollama base URL."
+        },
+        "voicePrompt.rewrite.timeoutMs": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "description": "Rewrite request timeout in milliseconds."
         },
         "voicePrompt.rewrite.style": {
           "type": "string",

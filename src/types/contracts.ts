@@ -3,6 +3,7 @@ export interface AudioChunk {
   sampleRateHz: number;
   channels: number;
   startedAtIso: string;
+  debugTranscript?: string;
 }
 
 export interface RawTranscript {

@@ -13,9 +13,19 @@ export function activate(context: vscode.ExtensionContext): void {
   const orchestrator = new VoicePromptOrchestrator({
     settings,
     audioCapture: new AudioCaptureService(),
-    sttProvider: new LocalSttProvider(),
+    sttProvider: new LocalSttProvider({
+      endpoint: settings.sttLocalEndpoint,
+      model: settings.sttModel,
+      timeoutMs: settings.sttTimeoutMs
+    }),
     rewriteProvider:
-      settings.rewriteProvider === "none" ? undefined : new OllamaRewriteProvider(),
+      settings.rewriteProvider === "none"
+        ? undefined
+        : new OllamaRewriteProvider({
+            baseUrl: settings.rewriteOllamaBaseUrl,
+            model: settings.rewriteModel,
+            timeoutMs: settings.rewriteTimeoutMs
+          }),
     inputInjector: new CursorInputInjector()
   });
 
