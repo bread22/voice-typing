@@ -53,6 +53,12 @@
           "default": "llama3.1:8b",
           "description": "Rewrite model identifier."
         },
+        "voicePrompt.rewrite.style": {
+          "type": "string",
+          "default": "engineering",
+          "enum": ["concise", "detailed", "engineering", "debugging"],
+          "description": "Rewrite style preset."
+        },
         "voicePrompt.previewBeforeInsert": {
           "type": "boolean",
           "default": false,

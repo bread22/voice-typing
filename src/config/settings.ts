@@ -9,6 +9,7 @@ export interface VoicePromptSettings {
   sttModel: string;
   rewriteProvider: RewriteProvider;
   rewriteModel: string;
+  rewriteStyle: "concise" | "detailed" | "engineering" | "debugging";
   previewBeforeInsert: boolean;
   autoFallbackToCloud: boolean;
   noRewriteBehavior: NoRewriteBehavior;
@@ -27,6 +28,10 @@ export function readSettings(): VoicePromptSettings {
     sttModel: cfg.get<string>("stt.model", "faster-whisper-base"),
     rewriteProvider: cfg.get<RewriteProvider>("rewrite.provider", "ollama"),
     rewriteModel: cfg.get<string>("rewrite.model", "llama3.1:8b"),
+    rewriteStyle: cfg.get<"concise" | "detailed" | "engineering" | "debugging">(
+      "rewrite.style",
+      "engineering"
+    ),
     previewBeforeInsert: cfg.get<boolean>("previewBeforeInsert", false),
     autoFallbackToCloud: cfg.get<boolean>("autoFallbackToCloud", false),
     noRewriteBehavior: cfg.get<NoRewriteBehavior>(
