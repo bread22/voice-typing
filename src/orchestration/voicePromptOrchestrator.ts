@@ -33,8 +33,19 @@ export class VoicePromptOrchestrator {
   }
 
   async runOnce(): Promise<void> {
+    void vscode.window.setStatusBarMessage("$(mic) Listening...", 60_000);
+
     const audio = await this.deps.audioCapture.captureOnce();
     this.lastCapturedAudio = audio;
+
+    if (audio.pcm16.length === 0) {
+      void vscode.window.showWarningMessage(
+        "No audio captured. Check your microphone and SoX installation."
+      );
+      return;
+    }
+
+    void vscode.window.setStatusBarMessage("$(sync~spin) Transcribing...", 30_000);
 
     const raw = await this.transcribeWithRetry(audio);
     const sourceText = raw.text.trim();
@@ -45,6 +56,8 @@ export class VoicePromptOrchestrator {
       );
       return;
     }
+
+    void vscode.window.setStatusBarMessage("$(edit) Rewriting...", 30_000);
 
     const finalText = await this.resolveFinalText(sourceText);
     if (!finalText) {
@@ -58,11 +71,11 @@ export class VoicePromptOrchestrator {
 
     try {
       await this.deps.inputInjector.insert(maybeEdited);
-      void vscode.window.setStatusBarMessage("Voice Prompt inserted", 1500);
+      void vscode.window.setStatusBarMessage("$(check) Voice Prompt inserted", 2000);
     } catch {
       await vscode.env.clipboard.writeText(maybeEdited);
       void vscode.window.showErrorMessage(
-        "Insertion failed. Copied rewritten prompt to clipboard."
+        "Insertion failed. Copied rewritten prompt to clipboard — paste with Cmd+V."
       );
     }
   }
@@ -74,7 +87,7 @@ export class VoicePromptOrchestrator {
       if (!this.warnedNoBackend) {
         this.warnedNoBackend = true;
         void vscode.window.showWarningMessage(
-          "No rewrite backend is configured. Configure Ollama or cloud rewrite in settings."
+          "No rewrite backend configured. Raw transcript will be used. Configure Ollama or cloud rewrite in settings."
         );
       }
 
@@ -126,7 +139,7 @@ export class VoicePromptOrchestrator {
       title: "Voice Prompt Preview",
       value: text,
       ignoreFocusOut: true,
-      prompt: "Edit before insert. Press Enter to confirm."
+      prompt: "Edit before insert. Press Enter to confirm, Escape to cancel."
     });
   }
 
@@ -135,7 +148,7 @@ export class VoicePromptOrchestrator {
       return await this.deps.sttProvider.transcribe(audio);
     } catch {
       const retrySelection = await vscode.window.showErrorMessage(
-        "Transcription failed.",
+        "Transcription failed. Is the STT service running?",
         "Retry"
       );
       if (retrySelection === "Retry" && this.lastCapturedAudio) {
@@ -145,4 +158,3 @@ export class VoicePromptOrchestrator {
     }
   }
 }
-

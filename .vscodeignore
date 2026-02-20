@@ -1,7 +1,13 @@
 .vscode/**
 src/**
 test/**
+stt-server/**
 tsconfig.json
+esbuild.mjs
 .gitignore
+.git-template/**
 PLAN.md
-
+CLAUDE.md
+**/*.ts
+!dist/**
+node_modules/**

@@ -14,6 +14,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const settings = readSettings();
   const secrets = new SecretsManager(context.secrets);
 
+  const audioCapture = new AudioCaptureService({
+    vadEnabled: settings.vadEnabled,
+    vadSilenceMs: settings.vadSilenceMs,
+    vadMinSpeechMs: settings.vadMinSpeechMs
+  });
+
   const baseOllamaProvider =
     settings.rewriteProvider === "none"
       ? undefined
@@ -40,7 +46,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const orchestrator = new VoicePromptOrchestrator({
     settings,
-    audioCapture: new AudioCaptureService(),
+    audioCapture,
     sttProvider: new LocalSttProvider({
       endpoint: settings.sttLocalEndpoint,
       model: settings.sttModel,
@@ -94,7 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
       await secrets.setCloudApiKey(apiKey);
-      void vscode.window.showInformationMessage("Cloud API key saved.");
+      void vscode.window.showInformationMessage("Cloud API key saved securely.");
     }
   );
   context.subscriptions.push(setCloudApiKeyDisposable);
@@ -106,14 +112,15 @@ export function activate(context: vscode.ExtensionContext): void {
     );
     item.name = "Voice Prompt";
     item.text = "$(mic) Voice Prompt";
-    item.tooltip = "Start voice prompt recording";
+    item.tooltip = "Start voice prompt recording (Cmd+Shift+V)";
     item.command = START_RECORDING_COMMAND;
     item.show();
     context.subscriptions.push(item);
+
+    audioCapture.setStatusBarItem(item);
   }
 }
 
 export function deactivate(): void {
   // No-op.
 }
-

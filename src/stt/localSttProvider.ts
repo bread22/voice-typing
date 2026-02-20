@@ -10,20 +10,16 @@ interface LocalSttProviderOptions {
 export class LocalSttProvider implements ISttProvider {
   constructor(private readonly options: LocalSttProviderOptions) {}
 
-  async transcribe(_audio: AudioChunk): Promise<RawTranscript> {
-    if (_audio.debugTranscript) {
-      return { text: _audio.debugTranscript };
-    }
-
-    if (_audio.pcm16.length === 0) {
+  async transcribe(audio: AudioChunk): Promise<RawTranscript> {
+    if (audio.pcm16.length === 0) {
       return { text: "" };
     }
 
     const body = {
       model: this.options.model,
-      audioBase64: _audio.pcm16.toString("base64"),
-      sampleRateHz: _audio.sampleRateHz,
-      channels: _audio.channels
+      audioBase64: audio.pcm16.toString("base64"),
+      sampleRateHz: audio.sampleRateHz,
+      channels: audio.channels
     };
 
     const res = await request(this.options.endpoint, {
@@ -44,4 +40,3 @@ export class LocalSttProvider implements ISttProvider {
     return { text: payload.text ?? "", confidence: payload.confidence };
   }
 }
-

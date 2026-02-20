@@ -3,7 +3,6 @@ export interface AudioChunk {
   sampleRateHz: number;
   channels: number;
   startedAtIso: string;
-  debugTranscript?: string;
 }
 
 export interface RawTranscript {
@@ -32,4 +31,3 @@ export interface IRewriteProvider {
 export interface IInputInjector {
   insert(text: string): Promise<void>;
 }
-

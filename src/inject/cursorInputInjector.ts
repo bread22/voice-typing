@@ -4,14 +4,23 @@ import { IInputInjector } from "../types/contracts";
 export class CursorInputInjector implements IInputInjector {
   async insert(text: string): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      throw new Error("No active editor to insert prompt into.");
+    if (editor) {
+      const success = await editor.edit((editBuilder) => {
+        editBuilder.replace(editor.selection, text);
+      });
+      if (success) {
+        return;
+      }
     }
 
-    await editor.edit((editBuilder) => {
-      const selection = editor.selection;
-      editBuilder.replace(selection, text);
-    });
+    await vscode.env.clipboard.writeText(text);
+
+    try {
+      await vscode.commands.executeCommand("editor.action.clipboardPasteAction");
+    } catch {
+      throw new Error(
+        "No active editor and paste command unavailable."
+      );
+    }
   }
 }
-
