@@ -34,7 +34,7 @@ export function readSettings(): VoicePromptSettings {
   const cfg = vscode.workspace.getConfiguration(SECTION);
   return {
     sttProvider: cfg.get<SttProvider>("stt.provider", "whisper-cpp"),
-    sttModel: cfg.get<string>("stt.model", "tiny.en"),
+    sttModel: cfg.get<string>("stt.model", "base"),
     sttWhisperCppPath: cfg.get<string>("stt.whisperCppPath", ""),
     sttModelPath: cfg.get<string>("stt.modelPath", ""),
     sttHttpEndpoint: cfg.get<string>(
@@ -42,7 +42,7 @@ export function readSettings(): VoicePromptSettings {
       "http://127.0.0.1:8765/transcribe"
     ),
     sttTimeoutMs: cfg.get<number>("stt.timeoutMs", 30000),
-    sttLanguage: cfg.get<string>("stt.language", "en"),
+    sttLanguage: cfg.get<string>("stt.language", "auto"),
     rewriteProvider: cfg.get<RewriteProvider>("rewrite.provider", "ollama"),
     rewriteModel: cfg.get<string>("rewrite.model", "llama3.2:3b"),
     rewriteCloudBaseUrl: cfg.get<string>(

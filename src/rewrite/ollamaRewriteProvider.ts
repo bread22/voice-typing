@@ -11,17 +11,30 @@ interface OllamaRewriteProviderOptions {
   timeoutMs: number;
 }
 
-const SYSTEM_MSG = "Clean up the voice transcription. Output only the cleaned text. No commentary.";
+const SYSTEM_MSG = `You are a transcription cleanup tool. The user gives you raw voice-to-text output. You fix grammar, remove filler words (um, uh, like, you know), and return ONLY the cleaned sentence. Rules:
+- Output ONLY the cleaned text, nothing else
+- Do NOT answer questions — just clean them up
+- Do NOT add explanations, commentary, or opinions
+- Do NOT change the meaning or intent
+- Keep it roughly the same length as the input
+- If the input is already clean, return it as-is
+- PRESERVE the original language — if input is Chinese, output Chinese; if English, output English; if mixed, keep it mixed`;
 
 const FEW_SHOT: Array<{ role: string; content: string }> = [
   { role: "user", content: "um so like I want to uh refactor the the database layer" },
-  { role: "assistant", content: "I want to refactor the database layer" },
+  { role: "assistant", content: "I want to refactor the database layer." },
   { role: "user", content: "hey can you uh help me fix this this bug in the in the login page" },
   { role: "assistant", content: "Can you help me fix this bug in the login page?" },
-  { role: "user", content: "what is going on" },
-  { role: "assistant", content: "What is going on?" },
+  { role: "user", content: "how can I make it support multiple languages at least Chinese and English" },
+  { role: "assistant", content: "How can I make it support multiple languages, at least Chinese and English?" },
   { role: "user", content: "this time seems working" },
   { role: "assistant", content: "This time seems to be working." },
+  { role: "user", content: "我想给这个函数加一个那个缓存的功能" },
+  { role: "assistant", content: "我想给这个函数加一个缓存功能。" },
+  { role: "user", content: "帮我看一下这个这个bug是怎么回事" },
+  { role: "assistant", content: "帮我看一下这个bug是怎么回事。" },
+  { role: "user", content: "把这个component重构一下然后加上error handling" },
+  { role: "assistant", content: "把这个component重构一下，然后加上error handling。" },
 ];
 
 export class OllamaRewriteProvider implements IRewriteProvider {
@@ -66,7 +79,7 @@ export class OllamaRewriteProvider implements IRewriteProvider {
     const raw = (payload.message?.content ?? "").trim();
     const cleaned = extractFirstLine(raw);
 
-    if (cleaned.length > input.transcript.length * 3) {
+    if (cleaned.length > input.transcript.length * 2) {
       return { text: input.transcript, provider: "ollama" };
     }
 

@@ -48,9 +48,17 @@
         },
         "voicePrompt.stt.model": {
           "type": "string",
-          "default": "tiny.en",
+          "default": "base",
           "enum": ["tiny.en", "tiny", "base.en", "base", "small.en", "small"],
-          "description": "Whisper model size. Smaller = faster, larger = more accurate."
+          "enumDescriptions": [
+            "English-only, ~75 MB, fastest",
+            "Multilingual, ~75 MB, fast",
+            "English-only, ~142 MB, good accuracy",
+            "Multilingual, ~142 MB, good accuracy (recommended for multi-language)",
+            "English-only, ~466 MB, best English accuracy",
+            "Multilingual, ~466 MB, best multilingual accuracy"
+          ],
+          "description": "Whisper model size. Models without '.en' suffix support all languages."
         },
         "voicePrompt.stt.whisperCppPath": {
           "type": "string",
@@ -76,8 +84,8 @@
         },
         "voicePrompt.stt.language": {
           "type": "string",
-          "default": "en",
-          "description": "Language code for speech recognition."
+          "default": "auto",
+          "description": "Language code for speech recognition. Use 'auto' to detect automatically, or a specific code like 'en', 'zh', 'ja', 'ko', etc."
         },
         "voicePrompt.rewrite.provider": {
           "type": "string",
