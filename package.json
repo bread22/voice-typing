@@ -139,7 +139,7 @@
   "scripts": {
     "build": "tsc -p .",
     "watch": "tsc -w -p .",
-    "test": "npm run build"
+    "test": "npm run build && node test/runTests.js"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
