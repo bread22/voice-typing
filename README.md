@@ -1,61 +1,163 @@
 # Voice Prompt — VS Code / Cursor Extension
 
-Speak into your microphone, get a clean coding prompt inserted into your editor. The extension captures voice, transcribes it locally via whisper.cpp, rewrites the raw transcript into a polished prompt via LLM, and inserts it at your cursor position.
+Speak into your microphone, get a clean coding prompt inserted into your editor. Everything runs locally — no cloud services required.
 
 **Flow:** Mic → whisper.cpp (local STT) → Ollama (local LLM rewrite) → Insert into editor
 
-**Platforms:** macOS, Linux, Windows — VS Code and Cursor
+**Platforms:** macOS · Linux · Windows — works in both **VS Code** and **Cursor**
 
 ---
 
-## Quick Start
+## Quick Start (macOS)
 
 ```bash
-# 1. Install whisper-cpp (speech-to-text)
-brew install whisper-cpp          # macOS
-# sudo apt install whisper-cpp    # Linux (or build from source)
-# winget install whisper-cpp      # Windows (or download from GitHub releases)
+brew install whisper-cpp sox       # STT engine + audio recorder
+brew install ollama                # optional: LLM rewrite
+ollama pull llama3.2:3b            # optional: pull rewrite model
 
-# 2. Install Ollama (optional, for LLM rewrite)
-brew install ollama               # macOS (or see ollama.com)
+# Install the extension
+git clone https://github.com/bread22/voice-typing.git
+cd voice-typing
+npm install
+npm run package
+# In VS Code/Cursor: Cmd+Shift+P → "Install from VSIX" → select voice-prompt-*.vsix
+```
+
+Press **Option+V** to start recording. The whisper model (~75 MB) downloads automatically on first use.
+
+---
+
+## Cross-Platform Installation
+
+### Step 1: Install whisper-cpp (speech-to-text engine)
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install whisper-cpp
+```
+
+Installs the `whisper-cli` binary to your PATH. Verify with:
+
+```bash
+whisper-cli --help
+```
+
+</details>
+
+<details>
+<summary><strong>Linux (Ubuntu / Debian)</strong></summary>
+
+**Option A — Build from source (recommended):**
+
+```bash
+sudo apt install build-essential libsdl2-dev
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+cmake -B build
+cmake --build build --config Release
+sudo cp build/bin/whisper-cli /usr/local/bin/
+```
+
+**Option B — Download pre-built binary:**
+
+Download from [whisper.cpp releases](https://github.com/ggerganov/whisper.cpp/releases), extract, and place `whisper-cli` somewhere in your PATH.
+
+Verify with:
+
+```bash
+whisper-cli --help
+```
+
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+**Option A — Build with CMake + Visual Studio:**
+
+```powershell
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+cmake -B build
+cmake --build build --config Release
+```
+
+The binary will be at `build\bin\Release\whisper-cli.exe`. Add it to your PATH or set `voicePrompt.stt.whisperCppPath` in settings.
+
+**Option B — Download pre-built binary:**
+
+Download from [whisper.cpp releases](https://github.com/ggerganov/whisper.cpp/releases). Place `whisper-cli.exe` in a directory on your PATH.
+
+Verify with:
+
+```powershell
+whisper-cli.exe --help
+```
+
+</details>
+
+### Step 2: Install an audio recorder
+
+The extension auto-detects the best available recorder for your platform:
+
+| Platform | Recommended                     | Install                                            |
+| -------- | ------------------------------- | -------------------------------------------------- |
+| macOS    | **SoX** (auto-detected first)  | `brew install sox`                                 |
+| Linux    | **arecord** (usually built-in) | `sudo apt install alsa-utils` (if not present)     |
+| Windows  | **FFmpeg**                      | `winget install ffmpeg` or [ffmpeg.org](https://ffmpeg.org/download.html) |
+
+**Detection priority:**
+
+| Platform | Tries in order              |
+| -------- | --------------------------- |
+| macOS    | SoX → FFmpeg               |
+| Linux    | arecord → SoX → FFmpeg    |
+| Windows  | FFmpeg → SoX              |
+
+If no recorder is found, the extension shows the appropriate install command.
+
+### Step 3: Install Ollama (optional — LLM rewrite)
+
+Ollama rewrites your raw voice transcript into a clean, structured prompt. Without it, the raw transcript is inserted directly (still useful!).
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install ollama
 ollama pull llama3.2:3b
-
-# 3. Install the extension
-cd voice-typing
-npm install
-npm run package
-# Then in VS Code/Cursor: Cmd+Shift+P → "Install from VSIX" → select the .vsix file
 ```
 
-The whisper model (`ggml-tiny.en.bin`, ~75MB) is auto-downloaded on first use — no manual setup needed.
+Ollama starts automatically via Homebrew services. Verify: `curl http://127.0.0.1:11434`
 
----
+</details>
 
-## Prerequisites
+<details>
+<summary><strong>Linux</strong></summary>
 
-| Dependency            | Purpose                  | Install                                                                                    |
-| --------------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
-| **whisper-cpp**       | Local speech-to-text     | `brew install whisper-cpp` (macOS) / build from [source](https://github.com/ggerganov/whisper.cpp) |
-| **Audio recorder**    | Microphone capture       | SoX (`brew install sox`), arecord (Linux, usually pre-installed), or FFmpeg                |
-| **Ollama** (optional) | Local LLM rewrite        | [ollama.com](https://ollama.com/) — then `ollama pull llama3.2:3b`                        |
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.2:3b
+```
 
-### Audio recorder auto-detection
+Start the server: `ollama serve` (or configure as a systemd service).
 
-The extension automatically finds the best available audio recorder:
+</details>
 
-| Platform | Priority order                        |
-| -------- | ------------------------------------- |
-| macOS    | SoX → FFmpeg                         |
-| Linux    | arecord (ALSA) → SoX → FFmpeg       |
-| Windows  | FFmpeg → SoX                         |
+<details>
+<summary><strong>Windows</strong></summary>
 
-If none is found, you'll get a message with the install command for your platform.
+Download from [ollama.com](https://ollama.com/download/windows) and install. Then:
 
----
+```powershell
+ollama pull llama3.2:3b
+```
 
-## Installation
+</details>
 
-### Option A — Install from VSIX (recommended)
+### Step 4: Install the extension
 
 ```bash
 git clone https://github.com/bread22/voice-typing.git
@@ -64,18 +166,19 @@ npm install
 npm run package
 ```
 
-Then in VS Code or Cursor: `Cmd+Shift+P` → **"Install from VSIX"** → select the generated `.vsix` file.
+This creates a `voice-prompt-*.vsix` file. Install it:
 
-### Option B — Development mode
+- **VS Code:** `Ctrl+Shift+P` → **"Extensions: Install from VSIX..."** → select the file
+- **Cursor:** `Cmd+Shift+P` (Mac) / `Ctrl+Shift+P` (Win/Linux) → **"Extensions: Install from VSIX..."** → select the file
 
-```bash
-git clone https://github.com/bread22/voice-typing.git
-cd voice-typing
-npm install
-npm run bundle:dev
-```
+Reload the editor when prompted.
 
-Open in VS Code/Cursor and press **F5** to launch the Extension Development Host.
+### Step 5: First run
+
+1. Press **Alt+V** (or **Option+V** on Mac)
+2. On first use, the whisper model (`ggml-tiny.en.bin`, ~75 MB) downloads automatically
+3. Grant microphone access if prompted by your OS
+4. Speak naturally — the extension auto-stops when you pause
 
 ---
 
@@ -83,56 +186,70 @@ Open in VS Code/Cursor and press **F5** to launch the Extension Development Host
 
 ### Start recording
 
-- **Keyboard shortcut:** `Alt+V` (Option+V on Mac)
-- **Command palette:** `Cmd+Shift+P` → **Voice Prompt: Start Recording**
-- **Status bar button:** Click the microphone button in the bottom bar
+| Method               | Shortcut / Action                                         |
+| -------------------- | --------------------------------------------------------- |
+| **Keyboard**         | `Alt+V` (Windows/Linux) · `Option+V` (Mac)              |
+| **Command palette**  | `Ctrl+Shift+P` → **Voice Prompt: Start Recording**      |
+| **Status bar**       | Click the **$(mic) Voice Prompt** button (bottom bar)    |
 
 ### Recording flow
 
-1. Press the shortcut or button — recording starts immediately
-2. Speak your prompt naturally
-3. Stop speaking — silence detection (VAD) auto-stops recording
-4. Status bar shows: **Listening...** → **Transcribing...** → **Rewriting...**
-5. The final prompt is inserted at your cursor position (cursor stays at the end)
+1. **Press shortcut** → status bar shows "Recording..."
+2. **Speak naturally** — e.g. *"add a function that validates email addresses using regex"*
+3. **Pause speaking** → silence detection (VAD) auto-stops recording
+4. **Status bar progress:** Listening → Transcribing → Rewriting → Done
+5. **Result inserted** at your cursor position (cursor moves to end, space appended)
 
-### What gets inserted
+### Example
 
-Your spoken input:
+**You say:**
 
 > "um so I need a function that uh validates email addresses and it should use regex and return true or false"
 
-Gets rewritten to:
+**Gets inserted as:**
 
 > Add a function that validates email addresses using regex. It should return true for valid emails and false otherwise.
+
+### Without Ollama (no rewrite)
+
+If Ollama isn't running, the raw transcript is inserted directly. You can also disable rewrite explicitly by setting `voicePrompt.rewrite.provider` to `none`.
 
 ---
 
 ## Settings Reference
 
-Open settings and search for `voicePrompt` to see all options.
+Open settings (`Ctrl+,`) and search for `voicePrompt`.
 
 ### Speech-to-Text
 
-| Setting                           | Default                            | Description                                    |
-| --------------------------------- | ---------------------------------- | ---------------------------------------------- |
-| `voicePrompt.stt.provider`        | `whisper-cpp`                      | `whisper-cpp` (local) or `http` (custom server)|
-| `voicePrompt.stt.model`           | `tiny.en`                          | Whisper model size (auto-downloaded)           |
-| `voicePrompt.stt.whisperCppPath`  | (auto-detect)                      | Path to whisper-cli binary                     |
-| `voicePrompt.stt.modelPath`       | (auto-download)                    | Path to GGML model file                        |
-| `voicePrompt.stt.httpEndpoint`    | `http://127.0.0.1:8765/transcribe` | HTTP endpoint (when provider is `http`)       |
-| `voicePrompt.stt.timeoutMs`       | `30000`                            | STT timeout (ms)                               |
-| `voicePrompt.stt.language`        | `en`                               | Speech recognition language                    |
+| Setting                          | Default                            | Description                                        |
+| -------------------------------- | ---------------------------------- | -------------------------------------------------- |
+| `voicePrompt.stt.provider`       | `whisper-cpp`                      | `whisper-cpp` (local CLI) or `http` (custom server)|
+| `voicePrompt.stt.model`          | `tiny.en`                          | Model size: `tiny.en`, `base.en`, `small.en`, etc. |
+| `voicePrompt.stt.whisperCppPath` | *(auto-detect)*                    | Custom path to `whisper-cli` binary                |
+| `voicePrompt.stt.modelPath`      | *(auto-download)*                  | Custom path to GGML model file                     |
+| `voicePrompt.stt.httpEndpoint`   | `http://127.0.0.1:8765/transcribe`| HTTP endpoint (when provider is `http`)            |
+| `voicePrompt.stt.timeoutMs`      | `30000`                            | STT timeout in milliseconds                        |
+| `voicePrompt.stt.language`       | `en`                               | Language code for speech recognition               |
 
-### Rewrite
+**Model sizes (auto-downloaded):**
 
-| Setting                             | Default                                      | Description                                                     |
-| ----------------------------------- | -------------------------------------------- | --------------------------------------------------------------- |
-| `voicePrompt.rewrite.provider`      | `ollama`                                     | `ollama`, `cloud`, or `none`                                    |
-| `voicePrompt.rewrite.model`         | `llama3.2:3b`                                | LLM model for rewriting                                        |
-| `voicePrompt.rewrite.ollamaBaseUrl` | `http://127.0.0.1:11434`                     | Ollama server URL                                               |
-| `voicePrompt.rewrite.cloudBaseUrl`  | `https://api.openai.com/v1/chat/completions` | Cloud API endpoint                                              |
-| `voicePrompt.rewrite.timeoutMs`     | `20000`                                      | Rewrite timeout (ms)                                            |
-| `voicePrompt.rewrite.style`         | `engineering`                                | `concise`, `detailed`, `engineering`, `debugging`               |
+| Model      | Size   | Speed   | Accuracy |
+| ---------- | ------ | ------- | -------- |
+| `tiny.en`  | ~75 MB | Fastest | Good for commands and short prompts |
+| `base.en`  | ~142 MB| Fast    | Better accuracy                     |
+| `small.en` | ~466 MB| Moderate| Best accuracy for English           |
+
+### Rewrite (LLM)
+
+| Setting                             | Default                                      | Description                                    |
+| ----------------------------------- | -------------------------------------------- | ---------------------------------------------- |
+| `voicePrompt.rewrite.provider`      | `ollama`                                     | `ollama`, `cloud`, or `none`                   |
+| `voicePrompt.rewrite.model`         | `llama3.2:3b`                                | LLM model for rewriting                        |
+| `voicePrompt.rewrite.ollamaBaseUrl` | `http://127.0.0.1:11434`                     | Ollama server URL                              |
+| `voicePrompt.rewrite.cloudBaseUrl`  | `https://api.openai.com/v1/chat/completions` | Cloud API endpoint (OpenAI-compatible)         |
+| `voicePrompt.rewrite.timeoutMs`     | `20000`                                      | Rewrite timeout in milliseconds                |
+| `voicePrompt.rewrite.style`         | `engineering`                                | `concise`, `detailed`, `engineering`, `debugging` |
 
 ### Behavior
 
@@ -140,87 +257,87 @@ Open settings and search for `voicePrompt` to see all options.
 | ----------------------------------- | ----------------- | ------------------------------------------------------------------------ |
 | `voicePrompt.previewBeforeInsert`   | `false`           | Show editable preview before inserting                                   |
 | `voicePrompt.autoFallbackToCloud`   | `false`           | Auto-fallback to cloud if local rewrite fails                            |
-| `voicePrompt.noRewriteBehavior`     | `stt_passthrough` | `stt_passthrough` inserts raw text, `disable_plugin` blocks insertion    |
+| `voicePrompt.noRewriteBehavior`     | `stt_passthrough` | `stt_passthrough` = insert raw text · `disable_plugin` = block insertion |
 | `voicePrompt.showStatusBarButton`   | `true`            | Show mic button in status bar                                            |
-| `voicePrompt.insertTrailingSpace`   | `true`            | Append space after insertion for easier consecutive inputs               |
+| `voicePrompt.insertTrailingSpace`   | `true`            | Append space after each insertion for easier consecutive inputs          |
 
 ### Voice Activity Detection (VAD)
 
-| Setting                       | Default | Description                                         |
-| ----------------------------- | ------- | --------------------------------------------------- |
-| `voicePrompt.vad.enabled`     | `true`  | Auto-stop recording after silence                   |
-| `voicePrompt.vad.silenceMs`   | `1500`  | Silence duration to trigger auto-stop (600–3000 ms) |
-| `voicePrompt.vad.minSpeechMs` | `300`   | Minimum speech duration to accept (100–1000 ms)     |
+| Setting                       | Default | Range       | Description                            |
+| ----------------------------- | ------- | ----------- | -------------------------------------- |
+| `voicePrompt.vad.enabled`     | `true`  | —           | Auto-stop recording after silence      |
+| `voicePrompt.vad.silenceMs`   | `1500`  | 600–3000 ms | Silence window before auto-stop        |
+| `voicePrompt.vad.minSpeechMs` | `300`   | 100–1000 ms | Minimum speech duration to accept      |
 
 **VAD tuning tips:**
 
-- Getting cut off mid-sentence? Increase `silenceMs` by 100 ms
-- Feels slow to respond? Decrease `silenceMs` by 100 ms
-- Ambient noise triggering recordings? Increase `minSpeechMs` to 500 ms
+- **Getting cut off mid-sentence?** Increase `silenceMs` by 100–200 ms
+- **Feels slow to respond?** Decrease `silenceMs` by 100 ms
+- **Ambient noise triggering?** Increase `minSpeechMs` to 400–500 ms
 
 ---
 
 ## Cloud Rewrite (Optional)
 
-If you prefer using OpenAI or another cloud LLM instead of local Ollama:
+Use OpenAI or another cloud LLM instead of (or as fallback to) local Ollama:
 
-1. **Set your API key:** `Cmd+Shift+P` → **Voice Prompt: Set Cloud API Key**
+1. **Set API key:** `Ctrl+Shift+P` → **Voice Prompt: Set Cloud API Key** (stored securely in VS Code SecretStorage)
 2. **Switch provider:** Set `voicePrompt.rewrite.provider` to `cloud`
-3. **Or use as automatic fallback:** Keep provider as `ollama`, enable `voicePrompt.autoFallbackToCloud`
+3. **Or use as fallback:** Keep `ollama` as provider, enable `voicePrompt.autoFallbackToCloud`
 
 ---
 
-## HTTP STT Server (Optional)
+## Troubleshooting
 
-If you prefer running your own STT server instead of whisper-cpp CLI:
-
-1. Set `voicePrompt.stt.provider` to `http`
-2. Start your server (the included `stt-server/` uses faster-whisper):
-
-```bash
-cd stt-server
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python server.py
-```
-
-The server starts on `http://127.0.0.1:8765`.
-
----
-
-## Error Handling
-
-| Scenario                       | Behavior                                              |
-| ------------------------------ | ----------------------------------------------------- |
-| **whisper-cpp not found**      | Error with platform-specific install instructions     |
-| **No audio recorder**          | Error with install instructions for your platform     |
-| **Transcription failed**       | "Transcription failed" with Retry button              |
-| **Ollama not running**         | Falls back to raw transcript (or cloud if configured) |
-| **No active editor**           | Copies prompt to clipboard with paste guidance        |
+| Problem                                  | Solution                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| **"whisper-cpp not found"**              | Install whisper-cpp (see platform instructions above)                    |
+| **"No audio recorder found"**            | Install SoX, arecord, or FFmpeg (see Step 2 above)                      |
+| **"Transcription failed"**               | Check that `whisper-cli` works: `whisper-cli -m <model> -f test.wav`    |
+| **Model download fails**                 | Set `voicePrompt.stt.modelPath` to a manually downloaded `.bin` file     |
+| **Ollama not rewriting**                 | Check `ollama ps` — model should be loaded. Try `ollama run llama3.2:3b`|
+| **Cursor position jumps on insert**      | Ensure `voicePrompt.insertTrailingSpace` is `true` (default)            |
+| **VAD cuts off too early**               | Increase `voicePrompt.vad.silenceMs` (try 2000–2500)                    |
+| **Extension not responding to hotkey**   | Reload window: `Ctrl+Shift+P` → "Developer: Reload Window"             |
+| **Microphone permission denied (macOS)** | System Preferences → Privacy & Security → Microphone → allow VS Code/Cursor |
 
 ---
 
 ## Architecture
 
 ```
-Mic (platform recorder) → WAV file → whisper-cpp (local STT) → Raw text
-  → Ollama/Cloud LLM → Clean prompt → Insert into editor
+┌─────────────┐    ┌──────────┐    ┌─────────────┐    ┌───────────┐    ┌─────────┐
+│  Microphone  │ →  │ Platform │ →  │ whisper-cpp │ →  │  Ollama   │ →  │ Editor  │
+│  (Alt+V)     │    │ Recorder │    │ (local STT) │    │ (rewrite) │    │ Insert  │
+└─────────────┘    │ WAV file │    │ Raw text    │    │ Clean text│    │ @ cursor│
+                   └──────────┘    └─────────────┘    └───────────┘    └─────────┘
 ```
+
+All processing happens locally on your machine. No audio or text is sent to any cloud service unless you explicitly configure a cloud rewrite provider.
 
 ### Project Structure
 
 ```
 src/
-  extension.ts         — command registration and activation
-  audio/               — cross-platform microphone capture with VAD
-  stt/                 — STT providers (whisper-cpp CLI, HTTP)
-  rewrite/             — LLM rewrite providers (Ollama, Cloud)
-  inject/              — text insertion into editor
-  config/              — settings and secret management
-  types/               — shared TypeScript interfaces
-  orchestration/       — pipeline controller
-stt-server/            — optional Python STT server (faster-whisper)
+  extension.ts           — command registration and activation
+  audio/
+    audioCaptureService  — cross-platform mic capture (SoX / arecord / FFmpeg) + VAD
+  stt/
+    whisperCppSttProvider — shells out to whisper-cli binary
+    httpSttProvider        — HTTP STT for custom servers (opt-in)
+    modelManager           — auto-downloads GGML models from HuggingFace
+  rewrite/
+    ollamaRewriteProvider  — local Ollama LLM rewrite
+    cloudRewriteProvider   — cloud LLM rewrite (OpenAI-compatible)
+  inject/
+    cursorInputInjector    — inserts text at cursor, manages position
+  config/
+    settings               — reads VS Code configuration
+    secrets                — manages API keys via SecretStorage
+  types/
+    contracts              — shared TypeScript interfaces
+  orchestration/
+    voicePromptOrchestrator — pipeline: record → transcribe → rewrite → inject
 ```
 
 ---
@@ -230,14 +347,14 @@ stt-server/            — optional Python STT server (faster-whisper)
 ```bash
 npm install          # install dependencies
 npm run build        # compile TypeScript
-npm run bundle:dev   # esbuild development bundle
-npm run bundle       # esbuild production bundle
+npm run bundle:dev   # esbuild development bundle (with source maps)
+npm run bundle       # esbuild production bundle (minified)
 npm run package      # create .vsix for distribution
 npm run dev          # build + package dev vsix
 npm run watch        # watch mode for development
 ```
 
-Press **F5** in VS Code/Cursor to launch the Extension Development Host.
+Press **F5** in VS Code/Cursor to launch the Extension Development Host with the debugger attached.
 
 ---
 
